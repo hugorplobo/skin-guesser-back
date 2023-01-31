@@ -21,7 +21,6 @@ pub async fn download_image(name: &str) -> DynamicImage {
 
 pub fn resize_image(img: DynamicImage) -> DynamicImage {
     let img = img.resize(512, 302, FilterType::Lanczos3);
-    img.save("img.jpg").unwrap();
 
     img
 }
