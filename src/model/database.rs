@@ -1,7 +1,7 @@
 use std::env;
 
 use chrono::NaiveDate;
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres, PgPool};
 
 use super::game::Game;
 
@@ -17,9 +17,19 @@ impl Database {
             .connect(&env::var("DATABASE_URL").expect("The database url is necessary!"))
             .await
             .unwrap();
-        
+
         Database {
             connection: pool
+        }
+    }
+
+    pub async fn new_single() -> Self {
+        let connection = PgPool::connect(
+            &env::var("DATABASE_URL").expect("The database url is necessary!")
+        ).await.unwrap();
+
+        Database {
+            connection
         }
     }
 
@@ -30,5 +40,20 @@ impl Database {
             .await?;
         
         Ok(res)
+    }
+
+    pub async fn insert_game(&self, game: &Game) -> Result<(), sqlx::Error> {
+        sqlx::query("
+            insert into games (time, pt_skin_name, en_skin_name, base64_img) values
+            ($1, $2, $3, $4)
+        ")
+            .bind(game.time)
+            .bind(&game.pt_skin_name)
+            .bind(&game.en_skin_name)
+            .bind(&game.base64_img)
+            .execute(&self.connection)
+            .await?;
+
+        Ok(())
     }
 }
