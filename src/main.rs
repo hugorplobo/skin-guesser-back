@@ -8,17 +8,26 @@ mod model;
 mod routes;
 mod services;
 
-use routes::game::game;
+use routes::{game::game, new_game::new_game};
 use model::database::Database;
+use services::create_game::create_game;
+use tokio_cron_scheduler::{JobScheduler, Job};
 
 pub struct AppState {
     database: Database
 }
 
-#[actix_web::main]
+#[tokio::main]
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
     env_logger::init();
+
+    let sched = JobScheduler::new().await.unwrap();
+    sched.add(Job::new_async("@daily", |_, _| Box::pin(async {
+        create_game().await;
+    })).unwrap()).await.unwrap();
+
+    sched.start().await.unwrap();
 
     let database = Database::new().await;
 
@@ -29,8 +38,9 @@ async fn main() -> std::io::Result<()> {
                 AppState { database: database.clone() }
             ))
             .service(game)
+            .service(new_game)
     })
-    .bind(("127.0.0.1", env::var("PORT")
+    .bind(("0.0.0.0", env::var("PORT")
         .expect("The port is necessary!")
         .parse::<u16>()
         .unwrap()
