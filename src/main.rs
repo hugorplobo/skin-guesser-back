@@ -1,5 +1,3 @@
-use std::env;
-
 use actix_web::{HttpServer, App, web};
 use actix_cors::Cors;
 use dotenvy::dotenv;
@@ -40,11 +38,7 @@ async fn main() -> std::io::Result<()> {
             .service(game)
             .service(new_game)
     })
-    .bind(("0.0.0.0", env::var("PORT")
-        .expect("The port is necessary!")
-        .parse::<u16>()
-        .unwrap()
-    ))?
+    .bind(("0.0.0.0", 8080))?
     .run()
     .await
 }
