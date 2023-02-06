@@ -5,7 +5,7 @@ use image::{DynamicImage, imageops::FilterType};
 
 pub async fn download_image(name: &str) -> DynamicImage {
     let img_bytes = reqwest::get(
-        format!("http://ddragon.leagueoflegends.com/cdn/img/champion/splash/{name}.jpg")
+        format!("http://ddragon.leagueoflegends.com/cdn/img/champion/loading/{name}.jpg")
     )
         .await
         .unwrap()
@@ -20,7 +20,12 @@ pub async fn download_image(name: &str) -> DynamicImage {
 }
 
 pub fn resize_image(img: DynamicImage) -> DynamicImage {
-    let img = img.resize(512, 302, FilterType::Lanczos3);
+    let resize_factor = 1.5;
+    let img = img.resize(
+        (img.width() as f64 / resize_factor) as u32,
+        (img.height() as f64 / resize_factor) as u32, 
+        FilterType::Lanczos3
+    );
 
     img
 }
